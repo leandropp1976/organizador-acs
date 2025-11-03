@@ -96,7 +96,7 @@ function App() {
   const fileInputEditRef = useRef(null)
 
   const calcularHorasAproveitadas = (atividade) => {
-    const criterio = CRITERIOS_CONVERSAO[atividade.tipo]
+    const criterio = atividade.tipo ? CRITERIOS_CONVERSAO[atividade.tipo] : null
     let horasCalculadas = parseInt(atividade.horasDeclaradas) || 0
 
     if (criterio) {
@@ -112,8 +112,8 @@ function App() {
   }
 
   const adicionarAtividade = () => {
-    if (!novaAtividade.titulo || !novaAtividade.nucleo) {
-      alert('Preencha os campos obrigatórios (título e núcleo)')
+    if (!novaAtividade.titulo || !novaAtividade.nucleo || !novaAtividade.tipo) {
+      alert('Preencha os campos obrigatórios (título, núcleo e tipo de atividade)')
       return
     }
 
@@ -330,7 +330,7 @@ function App() {
         }
 
         if (CRITERIOS_CONVERSAO[atividade.tipo]?.tipo === 'multiplicadorPorUnidade') {
-          page.drawText(`Quantidade de ${CRITERIOS_CONVERSAO[atividade.tipo].unidade}s: ${atividade.quantidadeUnidades}`, { x: 70, y: yPosition, size: 9 })
+          page.drawText(`Quantidade de ${CRITERIOS_CONVERSAO[atividade.tipo]?.unidade}s: ${atividade.quantidadeUnidades}`, { x: 70, y: yPosition, size: 9 })
           yPosition -= 12
         } else {
           page.drawText(`Horas Declaradas: ${atividade.horasDeclaradas}h`, { x: 70, y: yPosition, size: 9 })
@@ -618,7 +618,7 @@ function App() {
   const totalHoras = calcularTotalHoras()
   const nucleosInsuficientes = verificarMinimoNucleos()
 
-  const isMonitoriaOuIniciacao = novaAtividade.tipo === 'Participação em Programa de Monitoria e Iniciação à Docência (por disciplina/semestre)'
+  const isMonitoriaOuIniciacao = novaAtividade.tipo && novaAtividade.tipo === 'Participação em Programa de Monitoria e Iniciação à Docência (por disciplina/semestre)'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -714,7 +714,16 @@ function App() {
                         <Label htmlFor="nucleo">Núcleo *</Label>
                         <Select
                           value={novaAtividade.nucleo}
-                          onValueChange={(value) => setNovaAtividade({...novaAtividade, nucleo: value, tipo: '', horasDeclaradas: '', quantidadeUnidades: ''})}
+                          onValueChange={(value) => {
+                            const newNucleo = value || '';
+                            setNovaAtividade({
+                              ...novaAtividade,
+                              nucleo: newNucleo,
+                              tipo: '',
+                              horasDeclaradas: '',
+                              quantidadeUnidades: ''
+                            });
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o núcleo" />
@@ -730,7 +739,7 @@ function App() {
                       </div>
                     </div>
                     
-                    {novaAtividade.nucleo && (
+                    {novaAtividade.nucleo && TIPOS_ATIVIDADE[novaAtividade.nucleo] && (
                       <div>
                         <Label htmlFor="tipo">Tipo de Atividade</Label>
                         <Select
@@ -741,7 +750,7 @@ function App() {
                             <SelectValue placeholder="Selecione o tipo" />
                           </SelectTrigger>
                           <SelectContent>
-                            {TIPOS_ATIVIDADE[novaAtividade.nucleo]?.map((tipo) => (
+                            {TIPOS_ATIVIDADE[novaAtividade.nucleo] && TIPOS_ATIVIDADE[novaAtividade.nucleo].map((tipo) => (
                               <SelectItem key={tipo} value={tipo}>
                                 {tipo}
                               </SelectItem>
